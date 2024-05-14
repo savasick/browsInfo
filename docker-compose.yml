@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:7.4-apache
+    restart: always
+    volumes:
+      - ./index.php:/var/www/html/index.php
+    ports:
+      - 80:80
