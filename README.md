@@ -1,4 +1,4 @@
-# BrowsInfo
+# BrowserInfo
 
 #### start
 
