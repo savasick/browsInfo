@@ -19,7 +19,7 @@
 
     <h2>NETWORK</h2>
     <p>IP address (server): <?php echo $_SERVER['REMOTE_ADDR']; ?></p>
-    <p>Host name (server): <?php echo $_SERVER['REMOTE_HOST']; ?></p>
+    <p>Host name (server): <?php echo array_key_exists( 'REMOTE_HOST', $_SERVER) ? $_SERVER['REMOTE_HOST'] : gethostbyaddr( $_SERVER["REMOTE_ADDR"]);; ?></p>
     <p>Remote Port (server): <?php echo $_SERVER['REMOTE_PORT']; ?></p>
 
     <h2>SYSTEM</h2>
@@ -67,8 +67,9 @@
     <p>Document URI (server): <?php echo $_SERVER['REQUEST_URI']; ?></p>
     <p>Document last modify(JS): <script>document.write(document.lastModified);</script></p>
     <p>Referring Page (JS): <script>document.write(document.referrer);</script></p>
-    <p>Referring page (server): <?php echo $_SERVER['HTTP_REFERER']; ?></p>
+    <p>Referring page (server): <?php echo isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : ''; ?></p>
     <p>Request method (server): <?php echo $_SERVER['REQUEST_METHOD']; ?></p>
+    
 
     <h2>USER</h2>
     <p>Language (JS): <script>document.write(navigator.language);</script></p>
