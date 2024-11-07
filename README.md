@@ -1,16 +1,5 @@
 # BrowserInfo
 
-#### start by PHP
+BrowsInfo is a simple web page that collects and displays information about your browser, device, and network connection. Check your data and learn what information websites may collect.
 
-```bash
-php -S localhost:8000
-```
-
-
-#### start by docker
-
-```bash
-docker-compose up -d
-```
-
-#### http://localhost:8000/
+https://savasick.github.io/browsinfo/

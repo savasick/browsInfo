@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrowsInfo</title>
+    <style>
+        body {
+            background-color: #333;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1, h2, p {
+            color: #fff;
+        }
+        .info {
+            margin-bottom: 10px;
+            background-color: #444;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 600px;
+            overflow-x: auto;
+        }
+        .category {
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .category h2 {
+            cursor: pointer;
+            background-color: #555;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .explanation {
+            font-size: 0.9em;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+        .category-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>BrowsInfo</h1>
+
+    <div class="category">
+        <h2>NETWORK</h2>
+        <div class="explanation">Websites can collect information about your IP address and location.</div>
+        <div class="category-content" id="networkInfo"></div>
+        <div class="info" id="networkLink"></div>
+    </div>
+
+    <div class="category">
+        <h2>SYSTEM</h2>
+        <div class="explanation">Websites can determine your operating system, screen resolution, and other device characteristics.</div>
+        <div class="category-content" id="systemInfo"></div>
+    </div>
+
+    <div class="category">
+        <h2>BROWSER</h2>
+        <div class="explanation">Websites can determine your browser, its version, installed plugins, and other characteristics.</div>
+        <div class="category-content" id="browserInfo"></div>
+    </div>
+
+    <div class="category">
+        <h2>DOCUMENT</h2>
+        <div class="explanation">Websites can collect information about the current page, such as title, URL, and referrer.</div>
+        <div class="category-content" id="documentInfo"></div>
+    </div>
+
+    <div class="category">
+        <h2>USER</h2>
+        <div class="explanation">Websites can collect information about your preferences, language, geolocation, and other data.</div>
+        <div class="category-content" id="userInfo"></div>
+    </div>
+
+    <div class="category">
+        <h2>FONT DETECTION</h2>
+        <div class="explanation">Websites can determine installed fonts to create a unique fingerprint of your browser.</div>
+        <div class="category-content" id="fontInfo"></div>
+    </div>
+
+    <div class="category">
+        <h2>WEBGL FINGERPRINTING</h2>
+        <div class="explanation">WebGL can be used to create a unique fingerprint of your browser based on your graphics processor.</div>
+        <div class="category-content" id="webglInfo"></div>
+    </div>
+
+    <div class="category">
+        <h2>CANVAS FINGERPRINTING</h2>
+        <div class="explanation">Websites can use the Canvas API to create a unique fingerprint of your browser.</div>
+        <div class="category-content" id="canvasInfo"></div>
+    </div>
+
+    <script>
+        function getIP(json) {
+            const ip = json.ip;
+            const fields = 'status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query';
+            const ipApiUrl = `http://ip-api.com/json/${ip}?fields=${fields}`;
+
+            document.getElementById('networkInfo').innerHTML = `<div class="info"><strong>IP address (server):</strong> ${ip}</div>`;
+            document.getElementById('networkLink').innerHTML = `<div class="info"><strong>Check detailed IP information:</strong> <a href="${ipApiUrl}" target="_blank" rel="noopener noreferrer">${ipApiUrl}</a></div>`;
+
+            fetch(ipApiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('networkInfo').innerHTML += `
+                            <div class="info"><strong>Continent:</strong> ${data.continent}</div>
+                            <div class="info"><strong>Continent Code:</strong> ${data.continentCode}</div>
+                            <div class="info"><strong>Country:</strong> ${data.country}</div>
+                            <div class="info"><strong>Country Code:</strong> ${data.countryCode}</div>
+                            <div class="info"><strong>Region:</strong> ${data.region}</div>
+                            <div class="info"><strong>Region Name:</strong> ${data.regionName}</div>
+                            <div class="info"><strong>City:</strong> ${data.city}</div>
+                            <div class="info"><strong>District:</strong> ${data.district}</div>
+                            <div class="info"><strong>ZIP Code:</strong> ${data.zip}</div>
+                            <div class="info"><strong>Latitude:</strong> ${data.lat}</div>
+                            <div class="info"><strong>Longitude:</strong> ${data.lon}</div>
+                            <div class="info"><strong>Timezone:</strong> ${data.timezone}</div>
+                            <div class="info"><strong>Offset:</strong> ${data.offset}</div>
+                            <div class="info"><strong>Currency:</strong> ${data.currency}</div>
+                            <div class="info"><strong>ISP:</strong> ${data.isp}</div>
+                            <div class="info"><strong>Organization:</strong> ${data.org}</div>
+                            <div class="info"><strong>AS:</strong> ${data.as}</div>
+                            <div class="info"><strong>AS Name:</strong> ${data.asname}</div>
+                            <div class="info"><strong>Reverse DNS:</strong> ${data.reverse}</div>
+                            <div class="info"><strong>Mobile:</strong> ${data.mobile ? 'Yes' : 'No'}</div>
+                            <div class="info"><strong>Proxy:</strong> ${data.proxy ? 'Yes' : 'No'}</div>
+                            <div class="info"><strong>Hosting:</strong> ${data.hosting ? 'Yes' : 'No'}</div>
+                        `;
+                    } else {
+                        document.getElementById('networkInfo').innerHTML += `<div class="error"><strong>Error:</strong> ${data.message}</div>`;
+                    }
+                })
+                .catch(error => console.error('Error fetching additional information:', error));
+        }
+
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(getIP)
+            .catch(error => console.error('Error fetching IP address:', error));
+
+        const systemInfo = document.getElementById('systemInfo');
+        systemInfo.innerHTML = `
+            <div class="info"><strong>Operating System (server):</strong> ${navigator.userAgent}</div>
+            <div class="info"><strong>Platform (JS):</strong> ${navigator.platform}</div>
+            <div class="info"><strong>CPU Class (JS):</strong> ${navigator.hardwareConcurrency || 'Unknown'}</div>
+            <div class="info"><strong>Screen resolution (JS):</strong> ${screen.width}x${screen.height} pixels</div>
+            <div class="info"><strong>Color depth (JS):</strong> ${screen.colorDepth} bit</div>
+            <div class="info"><strong>Colors (JS):</strong> ${Math.pow(2, screen.colorDepth)}</div>
+            <div class="info"><strong>System Time (JS):</strong> ${new Date().toLocaleString()}</div>
+        `;
+
+        const browserInfo = document.getElementById('browserInfo');
+        const userAgent = navigator.userAgent;
+        const browserDetails = [
+            { name: 'Browser Name (JS)', value: navigator.appName },
+            { name: 'Browser Codename (JS)', value: navigator.appCodeName },
+            { name: 'Browser User Agent (JS)', value: userAgent },
+            { name: 'Browser Version (JS)', value: navigator.appVersion },
+            { name: 'Maximum window size (JS)', value: screen.availWidth + 'x' + screen.availHeight },
+            { name: 'Current window size (JS)', value: window.innerWidth + 'x' + window.innerHeight },
+            { name: 'JavaScript enabled (JS)', value: typeof window !== 'undefined' },
+            { name: 'Java enabled (JS)', value: navigator.javaEnabled() },
+            { name: 'Flash enabled (JS)', value: navigator.plugins['Shockwave Flash'] ? 'Yes' : 'No' },
+            { name: 'Silverlight enabled (JS)', value: navigator.plugins['Silverlight Plug-In'] ? 'Yes' : 'No' },
+            { name: 'Plug-ins (JS)', value: navigator.plugins.length },
+            { name: 'MIME types (JS)', value: navigator.mimeTypes.length },
+            { name: 'Browser Language (JS)', value: navigator.language },
+            { name: 'Accepted Languages (server)', value: navigator.languages.join(', ') },
+        ];
+
+        let browserOutput = '';
+        browserDetails.forEach((detail) => {
+            browserOutput += `<div class="info"><strong>${detail.name}:</strong> ${detail.value}</div>`;
+        });
+        browserInfo.innerHTML = browserOutput;
+
+        const documentInfo = document.getElementById('documentInfo');
+        documentInfo.innerHTML = `
+            <div class="info"><strong>Document title (JS):</strong> ${document.title}</div>
+            <div class="info"><strong>Document location (JS):</strong> ${document.location.href}</div>
+            <div class="info"><strong>Document URI (server):</strong> ${document.location.pathname}</div>
+            <div class="info"><strong>Document last modify(JS):</strong> ${document.lastModified}</div>
+            <div class="info"><strong>Referring Page (JS):</strong> ${document.referrer}</div>
+        `;
+
+        const userInfo = document.getElementById('userInfo');
+        userInfo.innerHTML = `
+            <div class="info"><strong>Language (JS):</strong> ${navigator.language}</div>
+            <div class="info"><strong>Online (JS):</strong> ${navigator.onLine}</div>
+            <div class="info"><strong>Screen pixel depth (JS):</strong> ${screen.pixelDepth}</div>
+            <div class="info"><strong>Window inner size (JS):</strong> ${window.innerWidth}x${window.innerHeight}</div>
+            <div class="info"><strong>Device pixel ratio (JS):</strong> ${window.devicePixelRatio}</div>
+        `;
+
+        const geolocation = document.createElement('div');
+        geolocation.className = 'info';
+        userInfo.appendChild(geolocation);
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                geolocation.innerHTML = `<strong>Latitude:</strong> ${lat}, <strong>Longitude:</strong> ${lon}`;
+            }, (error) => {
+                geolocation.innerHTML = 'Geolocation is not supported by this browser.';
+            });
+        } else {
+            geolocation.innerHTML = 'Geolocation is not supported by this browser.';
+        }
+
+        const canvasInfo = document.getElementById('canvasInfo');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = "14px 'Arial'";
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#f60';
+        ctx.fillRect(125, 1, 62, 20);
+        ctx.fillStyle = '#069';
+        ctx.fillText('Cwm fjordbank glyphs vext quiz, \ud83d\ude03', 2, 15);
+        ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+        ctx.fillText('Cwm fjordbank glyphs vext quiz, \ud83d\ude03', 4, 17);
+        const canvasData = canvas.toDataURL();
+        canvasInfo.innerHTML = `<div class="info"><strong>Canvas Fingerprint (JS):</strong> ${canvasData}</div>`;
+
+        const webglInfo = document.getElementById('webglInfo');
+        const canvasWebGL = document.createElement('canvas');
+        const gl = canvasWebGL.getContext('webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            webglInfo.innerHTML = `<div class="info"><strong>WebGL Renderer:</strong> ${renderer}</div>
+                                   <div class="info"><strong>WebGL Vendor:</strong> ${vendor}</div>`;
+        } else {
+            webglInfo.innerHTML = '<div class="info"><strong>WebGL is not supported by this browser.</strong></div>';
+        }
+
+        const fontInfo = document.getElementById('fontInfo');
+        const fontList = ['Arial', 'Times New Roman', 'Verdana', 'Helvetica', 'Courier New'];
+        const fontDetection = fontList.map(font => {
+            const element = document.createElement('span');
+            element.style.fontFamily = font;
+            element.style.position = 'absolute';
+            element.style.top = '-9999px';
+            element.style.left = '-9999px';
+            element.style.visibility = 'hidden';
+            element.innerText = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            document.body.appendChild(element);
+            const width = element.offsetWidth;
+            document.body.removeChild(element);
+            return { font, width };
+        });
+        fontInfo.innerHTML = fontDetection.map(font => `<div class="info"><strong>${font.font}:</strong> ${font.width}px</div>`).join('');
+    </script>
+</body>
+</html>
