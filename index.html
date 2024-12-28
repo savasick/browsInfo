@@ -55,7 +55,6 @@
         <h2>NETWORK</h2>
         <div class="explanation">Websites can collect information about your IP address and location.</div>
         <div class="category-content" id="networkInfo"></div>
-        <div class="info" id="networkLink"></div>
     </div>
 
     <div class="category">
@@ -101,57 +100,26 @@
     </div>
 
     <script>
-        function getIP(json) {
-            const ip = json.ip;
-            const fields = 'status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query';
-            const ipApiUrl = `http://ip-api.com/json/${ip}?fields=${fields}`;
-
-            document.getElementById('networkInfo').innerHTML = `<div class="info"><strong>IP address (server):</strong> ${ip}</div>`;
-            document.getElementById('networkLink').innerHTML = `<div class="info"><strong>Check detailed IP information:</strong> <a href="${ipApiUrl}" target="_blank" rel="noopener noreferrer">${ipApiUrl}</a></div>`;
-
-            fetch(ipApiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        document.getElementById('networkInfo').innerHTML += `
-                            <div class="info"><strong>Continent:</strong> ${data.continent}</div>
-                            <div class="info"><strong>Continent Code:</strong> ${data.continentCode}</div>
-                            <div class="info"><strong>Country:</strong> ${data.country}</div>
-                            <div class="info"><strong>Country Code:</strong> ${data.countryCode}</div>
-                            <div class="info"><strong>Region:</strong> ${data.region}</div>
-                            <div class="info"><strong>Region Name:</strong> ${data.regionName}</div>
-                            <div class="info"><strong>City:</strong> ${data.city}</div>
-                            <div class="info"><strong>District:</strong> ${data.district}</div>
-                            <div class="info"><strong>ZIP Code:</strong> ${data.zip}</div>
-                            <div class="info"><strong>Latitude:</strong> ${data.lat}</div>
-                            <div class="info"><strong>Longitude:</strong> ${data.lon}</div>
-                            <div class="info"><strong>Timezone:</strong> ${data.timezone}</div>
-                            <div class="info"><strong>Offset:</strong> ${data.offset}</div>
-                            <div class="info"><strong>Currency:</strong> ${data.currency}</div>
-                            <div class="info"><strong>ISP:</strong> ${data.isp}</div>
-                            <div class="info"><strong>Organization:</strong> ${data.org}</div>
-                            <div class="info"><strong>AS:</strong> ${data.as}</div>
-                            <div class="info"><strong>AS Name:</strong> ${data.asname}</div>
-                            <div class="info"><strong>Reverse DNS:</strong> ${data.reverse}</div>
-                            <div class="info"><strong>Mobile:</strong> ${data.mobile ? 'Yes' : 'No'}</div>
-                            <div class="info"><strong>Proxy:</strong> ${data.proxy ? 'Yes' : 'No'}</div>
-                            <div class="info"><strong>Hosting:</strong> ${data.hosting ? 'Yes' : 'No'}</div>
-                        `;
-                    } else {
-                        document.getElementById('networkInfo').innerHTML += `<div class="error"><strong>Error:</strong> ${data.message}</div>`;
-                    }
-                })
-                .catch(error => console.error('Error fetching additional information:', error));
-        }
-
-        fetch('https://api.ipify.org?format=json')
+        fetch('https://ipinfo.io/json')
             .then(response => response.json())
-            .then(getIP)
-            .catch(error => console.error('Error fetching IP address:', error));
+            .then(data => {
+                const networkInfo = document.getElementById('networkInfo');
+                networkInfo.innerHTML = `
+                    <div class="info"><strong>IP Address:</strong> ${data.ip}</div>
+                    <div class="info"><strong>Location:</strong> ${data.city}, ${data.region}, ${data.country}</div>
+                    <div class="info"><strong>Postal Code:</strong> ${data.postal}</div>
+                    <div class="info"><strong>Timezone:</strong> ${data.timezone}</div>
+                    <div class="info"><strong>ISP:</strong> ${data.org}</div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error fetching IP information:', error);
+                document.getElementById('networkInfo').innerHTML = `<div class="info"><strong>Error:</strong> Could not fetch IP information.</div>`;
+            });
 
         const systemInfo = document.getElementById('systemInfo');
         systemInfo.innerHTML = `
-            <div class="info"><strong>Operating System (server):</strong> ${navigator.userAgent}</div>
+            <div class="info"><strong>Operating System (JS):</strong> ${navigator.userAgent}</div>
             <div class="info"><strong>Platform (JS):</strong> ${navigator.platform}</div>
             <div class="info"><strong>CPU Class (JS):</strong> ${navigator.hardwareConcurrency || 'Unknown'}</div>
             <div class="info"><strong>Screen resolution (JS):</strong> ${screen.width}x${screen.height} pixels</div>
@@ -176,7 +144,7 @@
             { name: 'Plug-ins (JS)', value: navigator.plugins.length },
             { name: 'MIME types (JS)', value: navigator.mimeTypes.length },
             { name: 'Browser Language (JS)', value: navigator.language },
-            { name: 'Accepted Languages (server)', value: navigator.languages.join(', ') },
+            { name: 'Accepted Languages (JS)', value: navigator.languages.join(', ') },
         ];
 
         let browserOutput = '';
@@ -189,8 +157,8 @@
         documentInfo.innerHTML = `
             <div class="info"><strong>Document title (JS):</strong> ${document.title}</div>
             <div class="info"><strong>Document location (JS):</strong> ${document.location.href}</div>
-            <div class="info"><strong>Document URI (server):</strong> ${document.location.pathname}</div>
-            <div class="info"><strong>Document last modify(JS):</strong> ${document.lastModified}</div>
+            <div class="info"><strong>Document URI (JS):</strong> ${document.location.pathname}</div>
+            <div class="info"><strong>Document last modify (JS):</strong> ${document.lastModified}</div>
             <div class="info"><strong>Referring Page (JS):</strong> ${document.referrer}</div>
         `;
 
