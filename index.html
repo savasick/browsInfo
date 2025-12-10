@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
     <title>BrowsInfo</title>
     <style>
         body {
-            background-color: #333;
+            background-color: #222;
             color: #fff;
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -17,220 +18,534 @@
         h1, h2, p {
             color: #fff;
         }
+        .warning {
+            background-color: #555;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            max-width: 700px;
+            text-align: center;
+            border-left: 4px solid #ffcc00;
+        }
         .info {
-            margin-bottom: 10px;
-            background-color: #444;
+            margin-bottom: 8px;
+            background-color: #333;
             padding: 10px;
             border-radius: 5px;
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             overflow-x: auto;
+            font-size: 0.95em;
         }
         .category {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
         }
         .category h2 {
             cursor: pointer;
-            background-color: #555;
+            background-color: #444;
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 10px;
         }
         .explanation {
             font-size: 0.9em;
-            color: #ccc;
+            color: #bbb;
             margin-bottom: 10px;
+            line-height: 1.4;
         }
-        .category-content {
-            display: block;
+        .mouse-coords {
+            font-family: monospace;
+            background-color: #111;
+            padding: 4px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        code {
+            background: #2a2a2a;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
     <h1>BrowsInfo</h1>
 
+    <div class="warning">
+        <strong>⚠️ This page runs entirely in your browser.</strong><br>
+        It does <em>not</em> send your data to any server. All information shown is for educational purposes only.
+    </div>
+
     <div class="category">
         <h2>NETWORK</h2>
-        <div class="explanation">Websites can collect information about your IP address and location.</div>
-        <div class="category-content" id="networkInfo"></div>
+        <div class="explanation">
+            Your public IP address is visible to every website you visit (via their server logs). 
+            JavaScript cannot access it directly — this demo uses a third-party API (<code>ipinfo.io</code>) to show it.
+        </div>
+        <div class="category-content" id="networkInfo">Loading...</div>
     </div>
 
     <div class="category">
         <h2>SYSTEM</h2>
-        <div class="explanation">Websites can determine your operating system, screen resolution, and other device characteristics.</div>
+        <div class="explanation">
+            Passive data: screen size, color depth, OS (inferred from User-Agent), and hardware concurrency.
+        </div>
         <div class="category-content" id="systemInfo"></div>
     </div>
 
     <div class="category">
         <h2>BROWSER</h2>
-        <div class="explanation">Websites can determine your browser, its version, installed plugins, and other characteristics.</div>
+        <div class="explanation">
+            Your browser and OS can be inferred from the User-Agent string. Plugins and MIME types are deprecated but still detectable.
+        </div>
         <div class="category-content" id="browserInfo"></div>
     </div>
 
     <div class="category">
         <h2>DOCUMENT</h2>
-        <div class="explanation">Websites can collect information about the current page, such as title, URL, and referrer.</div>
+        <div class="explanation">
+            Passive metadata about the current page: URL, referrer, title, and last modification time.
+        </div>
         <div class="category-content" id="documentInfo"></div>
     </div>
 
     <div class="category">
-        <h2>USER</h2>
-        <div class="explanation">Websites can collect information about your preferences, language, geolocation, and other data.</div>
+        <h2>USER & PRIVACY</h2>
+        <div class="explanation">
+            Includes language, online status, and geolocation (requires your permission). 
+            Also shows storage capabilities and potential WebRTC IP leaks.
+        </div>
         <div class="category-content" id="userInfo"></div>
     </div>
 
     <div class="category">
+        <h2>STORAGE & TRACKING</h2>
+        <div class="explanation">
+            Websites can use cookies, localStorage, and other storage to track you across sessions.
+        </div>
+        <div class="category-content" id="storageInfo"></div>
+    </div>
+
+    <div class="category">
         <h2>FONT DETECTION</h2>
-        <div class="explanation">Websites can determine installed fonts to create a unique fingerprint of your browser.</div>
+        <div class="explanation">
+            By measuring text width, sites can detect installed fonts — a key part of browser fingerprinting.
+        </div>
         <div class="category-content" id="fontInfo"></div>
     </div>
 
     <div class="category">
         <h2>WEBGL FINGERPRINTING</h2>
-        <div class="explanation">WebGL can be used to create a unique fingerprint of your browser based on your graphics processor.</div>
+        <div class="explanation">
+            WebGL reveals GPU and driver details, creating a highly unique fingerprint.
+        </div>
         <div class="category-content" id="webglInfo"></div>
     </div>
 
     <div class="category">
         <h2>CANVAS FINGERPRINTING</h2>
-        <div class="explanation">Websites can use the Canvas API to create a unique fingerprint of your browser.</div>
+        <div class="explanation">
+            Rendering text/graphics on a hidden canvas produces slightly different output on different systems — used for fingerprinting.
+        </div>
         <div class="category-content" id="canvasInfo"></div>
     </div>
 
+    <div class="category">
+        <h2>USER BEHAVIOR</h2>
+        <div class="explanation">
+            Mouse movements and click patterns can be tracked for analytics or bot detection.
+        </div>
+        <div class="category-content" id="behaviorInfo"></div>
+    </div>
+
     <script>
+        // === NETWORK ===
         fetch('https://ipinfo.io/json')
             .then(response => response.json())
             .then(data => {
-                const networkInfo = document.getElementById('networkInfo');
-                networkInfo.innerHTML = `
-                    <div class="info"><strong>IP Address:</strong> ${data.ip}</div>
-                    <div class="info"><strong>Location:</strong> ${data.city}, ${data.region}, ${data.country}</div>
-                    <div class="info"><strong>Postal Code:</strong> ${data.postal}</div>
-                    <div class="info"><strong>Timezone:</strong> ${data.timezone}</div>
-                    <div class="info"><strong>ISP:</strong> ${data.org}</div>
+                const net = document.getElementById('networkInfo');
+                net.innerHTML = `
+                    <div class="info"><strong>Public IP:</strong> ${data.ip || 'Unknown'}</div>
+                    <div class="info"><strong>Location:</strong> ${data.city ? `${data.city}, ` : ''}${data.region}, ${data.country}</div>
+                    <div class="info"><strong>ISP/Org:</strong> ${data.org || 'Unknown'}</div>
+                    <div class="info"><strong>Timezone:</strong> ${data.timezone || 'Unknown'}</div>
                 `;
             })
-            .catch(error => {
-                console.error('Error fetching IP information:', error);
-                document.getElementById('networkInfo').innerHTML = `<div class="info"><strong>Error:</strong> Could not fetch IP information.</div>`;
+            .catch(() => {
+                document.getElementById('networkInfo').innerHTML = 
+                    `<div class="info"><strong>IP Info:</strong> Could not load (CORS or network issue). Note: IP is always visible to the server.</div>`;
             });
 
+        // === SYSTEM INFO ===
         const systemInfo = document.getElementById('systemInfo');
+
+        const ram = 'deviceMemory' in navigator ? `${navigator.deviceMemory} GB` : 'Not available';
+
+        const touchPoints = navigator.maxTouchPoints || ('ontouchstart' in window ? 'Yes (basic)' : 'No');
+
+        const orientation = screen.orientation ? screen.orientation.type : 
+            (window.orientation !== undefined ? ['portrait-primary', 'landscape-primary', 'portrait-secondary', 'landscape-secondary'][Math.floor(window.orientation / 90) + 1] || 'unknown' : 'Not supported');
+
+
         systemInfo.innerHTML = `
-            <div class="info"><strong>Operating System (JS):</strong> ${navigator.userAgent}</div>
-            <div class="info"><strong>Platform (JS):</strong> ${navigator.platform}</div>
-            <div class="info"><strong>CPU Class (JS):</strong> ${navigator.hardwareConcurrency || 'Unknown'}</div>
-            <div class="info"><strong>Screen resolution (JS):</strong> ${screen.width}x${screen.height} pixels</div>
-            <div class="info"><strong>Color depth (JS):</strong> ${screen.colorDepth} bit</div>
-            <div class="info"><strong>Colors (JS):</strong> ${Math.pow(2, screen.colorDepth)}</div>
-            <div class="info"><strong>System Time (JS):</strong> ${new Date().toLocaleString()}</div>
+            <div class="info"><strong>User-Agent:</strong> <code>${navigator.userAgent}</code></div>
+            <div class=" info"><strong>Platform:</strong> ${navigator.platform}</div>
+            <div class="info"><strong>CPU Cores:</strong> ${navigator.hardwareConcurrency || 'Unknown'}</div>
+            <div class="info"><strong>RAM Estimate:</strong> ${ram}</div>
+            <div class="info"><strong>Touch Support:</strong> ${touchPoints}</div>
+            <div class="info"><strong>Screen Resolution:</strong> ${screen.width}×${screen.height}</div>
+            <div class="info"><strong>Available Screen:</strong> ${screen.availWidth}×${screen.availHeight}</div>
+            <div class="info"><strong>Screen Orientation:</strong> ${orientation}</div>
+            <div class="info"><strong>Color Depth:</strong> ${screen.colorDepth}-bit (${Math.pow(2, screen.colorDepth)} colors)</div>
+            <div class="info"><strong>Device Pixel Ratio:</strong> ${window.devicePixelRatio}</div>
+            <div class="info"><strong>System Time:</strong> ${new Date().toLocaleString()}</div>
         `;
+
+        // === BROWSER INFO ===
+        function detectOS() {
+            const ua = navigator.userAgent;
+            if (ua.includes("Win")) return "Windows";
+            if (ua.includes("Mac")) return "macOS";
+            if (ua.includes("Linux")) return "Linux";
+            if (ua.includes("Android")) return "Android";
+            if (ua.includes("iPhone") || ua.includes("iPad")) return "iOS";
+            return "Unknown OS";
+        }
+
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            if (ua.includes("Firefox")) return "Firefox";
+            if (ua.includes("Edg")) return "Edge";
+            if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
+            if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+            return "Unknown Browser";
+        }
+
+        let modernUA = 'Not supported';
+        if (navigator.userAgentData) {
+            modernUA = navigator.userAgentData.getHighEntropyValues(["architecture", "model", "platform", "platformVersion", "uaFullVersion"])
+                .then(ua => {
+                    modernUA = `
+                        OS: ${ua.platform} ${ua.platformVersion}<br>
+                        CPU: ${ua.architecture}<br>
+                        Full UA: ${ua.uaFullVersion}
+                    `;
+                    browserInfo.innerHTML = browserInfoHTML;
+                })
+                .catch(() => modernUA = 'Permission denied or not available');
+        }
+
+        const supports = {
+            webAuthn: 'credentials' in navigator,
+            webUSB: 'usb' in navigator,
+            webGPU: 'gpu' in navigator,
+            webAudio: 'AudioContext' in window
+        };
 
         const browserInfo = document.getElementById('browserInfo');
-        const userAgent = navigator.userAgent;
-        const browserDetails = [
-            { name: 'Browser Name (JS)', value: navigator.appName },
-            { name: 'Browser Codename (JS)', value: navigator.appCodeName },
-            { name: 'Browser User Agent (JS)', value: userAgent },
-            { name: 'Browser Version (JS)', value: navigator.appVersion },
-            { name: 'Maximum window size (JS)', value: screen.availWidth + 'x' + screen.availHeight },
-            { name: 'Current window size (JS)', value: window.innerWidth + 'x' + window.innerHeight },
-            { name: 'JavaScript enabled (JS)', value: typeof window !== 'undefined' },
-            { name: 'Java enabled (JS)', value: navigator.javaEnabled() },
-            { name: 'Flash enabled (JS)', value: navigator.plugins['Shockwave Flash'] ? 'Yes' : 'No' },
-            { name: 'Silverlight enabled (JS)', value: navigator.plugins['Silverlight Plug-In'] ? 'Yes' : 'No' },
-            { name: 'Plug-ins (JS)', value: navigator.plugins.length },
-            { name: 'MIME types (JS)', value: navigator.mimeTypes.length },
-            { name: 'Browser Language (JS)', value: navigator.language },
-            { name: 'Accepted Languages (JS)', value: navigator.languages.join(', ') },
-        ];
+        const browserInfoHTML = `
+            <div class="info"><strong>Detected Browser:</strong> ${detectBrowser()}</div>
+            <div class="info"><strong>Detected OS:</strong> ${detectOS()}</div>
+            <div class="info"><strong>User-Agent:</strong> <code>${navigator.userAgent}</code></div>
+            ${navigator.userAgentData ? `<div class="info"><strong>Modern User-Agent (High-Entropy):</strong><br><code>${modernUA}</code></div>` : ''}
+            <div class="info"><strong>Language:</strong> ${navigator.language}</div>
+            <div class="info"><strong>Accepted Languages:</strong> ${Array.from(navigator.languages).join(', ')}</div>
+            <div class="info"><strong>Plugins Count:</strong> ${navigator.plugins?.length || 0} (mostly deprecated)</div>
+            <div class="info"><strong>MIME Types:</strong> ${navigator.mimeTypes?.length || 0}</div>
+            <div class="info"><strong>Java Enabled:</strong> ${navigator.javaEnabled?.() ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>WebAuthn (Passkey):</strong> ${supports.webAuthn ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>WebUSB:</strong> ${supports.webUSB ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>WebGPU:</strong> ${supports.webGPU ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>Web Audio API:</strong> ${supports.webAudio ? 'Yes' : 'No'}</div>
+        `;
+        browserInfo.innerHTML = browserInfoHTML;
 
-        let browserOutput = '';
-        browserDetails.forEach((detail) => {
-            browserOutput += `<div class="info"><strong>${detail.name}:</strong> ${detail.value}</div>`;
-        });
-        browserInfo.innerHTML = browserOutput;
-
+        // === DOCUMENT INFO ===
         const documentInfo = document.getElementById('documentInfo');
         documentInfo.innerHTML = `
-            <div class="info"><strong>Document title (JS):</strong> ${document.title}</div>
-            <div class="info"><strong>Document location (JS):</strong> ${document.location.href}</div>
-            <div class="info"><strong>Document URI (JS):</strong> ${document.location.pathname}</div>
-            <div class="info"><strong>Document last modify (JS):</strong> ${document.lastModified}</div>
-            <div class="info"><strong>Referring Page (JS):</strong> ${document.referrer}</div>
+            <div class="info"><strong>Page Title:</strong> ${document.title}</div>
+            <div class="info"><strong>Full URL:</strong> ${document.location.href}</div>
+            <div class="info"><strong>Referrer:</strong> ${document.referrer || 'None (direct visit or privacy setting)'}</div>
+            <div class="info"><strong>Last Modified:</strong> ${document.lastModified}</div>
         `;
 
+        // === USER & PRIVACY ===
         const userInfo = document.getElementById('userInfo');
-        userInfo.innerHTML = `
-            <div class="info"><strong>Language (JS):</strong> ${navigator.language}</div>
-            <div class="info"><strong>Online (JS):</strong> ${navigator.onLine}</div>
-            <div class="info"><strong>Screen pixel depth (JS):</strong> ${screen.pixelDepth}</div>
-            <div class="info"><strong>Window inner size (JS):</strong> ${window.innerWidth}x${window.innerHeight}</div>
-            <div class="info"><strong>Device pixel ratio (JS):</strong> ${window.devicePixelRatio}</div>
-        `;
 
-        const geolocation = document.createElement('div');
-        geolocation.className = 'info';
-        userInfo.appendChild(geolocation);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        let incognito = 'Unknown';
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+            navigator.storage.estimate().then(estimate => {
+                if (estimate.quota && estimate.quota < 1e8) {
+                    incognito = 'Likely incognito/private mode';
+                } else {
+                    incognito = 'Probably regular mode';
+                }
+                updateUserInfo();
+            }).catch(() => incognito = 'Detection failed');
+        } else {
+            incognito = 'Not detectable';
+        }
+
+        let adblock = 'Not detected';
+        try {
+            const adTest = document.createElement('div');
+            adTest.innerHTML = '&nbsp;';
+            adTest.className = 'adsbox';
+            adTest.style.height = '1px';
+            adTest.style.width = '1px';
+            adTest.style.position = 'absolute';
+            adTest.style.left = '-9999px';
+            document.body.appendChild(adTest);
+            setTimeout(() => {
+                if (adTest.offsetHeight === 0 || adTest.offsetParent === null) {
+                    adblock = 'Likely active';
+                }
+                document.body.removeChild(adTest);
+                updateUserInfo();
+            }, 50);
+        } catch (e) {
+            adblock = 'Detection error';
+        }
+
+        function updateUserInfo() {
+            userInfo.innerHTML = `
+                <div class="info"><strong>Browser Language:</strong> ${navigator.language}</div>
+                <div class="info"><strong>Online Status:</strong> ${navigator.onLine ? 'Online' : 'Offline'}</div>
+                <div class="info"><strong>Timezone:</strong> ${Intl.DateTimeFormat().resolvedOptions().timeZone}</div>
+                <div class="info"><strong>Color Scheme Preference:</strong> ${prefersDark ? 'Dark' : 'Light'}</div>
+                <div class="info"><strong>Prefers Reduced Motion:</strong> ${prefersReducedMotion ? 'Yes' : 'No'}</div>
+                <div class="info"><strong>Incognito/Private Mode:</strong> ${incognito}</div>
+                <div class="info"><strong>Adblocker:</strong> ${adblock}</div>
+            `;
+        }
+
+        updateUserInfo();
+
+        const geoDiv = document.createElement('div');
+        geoDiv.className = 'info';
+        geoDiv.innerHTML = '<strong>Geolocation:</strong> Requesting permission...';
+        userInfo.appendChild(geoDiv);
 
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                geolocation.innerHTML = `<strong>Latitude:</strong> ${lat}, <strong>Longitude:</strong> ${lon}`;
-            }, (error) => {
-                geolocation.innerHTML = 'Geolocation is not supported by this browser.';
-            });
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    geoDiv.innerHTML = `<strong>Geolocation:</strong> Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)} (granted by you)`;
+                },
+                (err) => {
+                    geoDiv.innerHTML = `<strong>Geolocation:</strong> Permission denied or not supported (${err.message})`;
+                }
+            );
         } else {
-            geolocation.innerHTML = 'Geolocation is not supported by this browser.';
+            geoDiv.innerHTML = '<strong>Geolocation:</strong> Not supported';
         }
 
+        // === WEBRTC LEAK ===
+        const webrtcDiv = document.createElement('div');
+        webrtcDiv.className = 'info';
+        webrtcDiv.innerHTML = '<strong>WebRTC Leak Test:</strong> Running...';
+        userInfo.appendChild(webrtcDiv);
+
+        function getLocalIPs() {
+            const ips = new Set();
+            const pc = new RTCPeerConnection({ iceServers: [] });
+            pc.createDataChannel('');
+            pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .catch(() => {});
+            pc.onicecandidate = (ice) => {
+                if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+                const myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate);
+                if (myIP) ips.add(myIP[1]);
+                if (ice.candidate.candidate.includes('end-of-candidates')) {
+                    webrtcDiv.innerHTML = ips.size > 0 
+                        ? `<strong>WebRTC Leak:</strong> Local IP(s) detected: ${Array.from(ips).join(', ')}`
+                        : `<strong>WebRTC Leak:</strong> No local IPs detected (or blocked)`;
+                    pc.close();
+                }
+            };
+            setTimeout(() => {
+                if (ips.size === 0) {
+                    webrtcDiv.innerHTML = '<strong>WebRTC Leak:</strong> Test timed out (may be blocked by privacy extensions)';
+                    pc.close();
+                }
+            }, 2000);
+        }
+        getLocalIPs();
+
+        // === STORAGE & TRACKING ===
+        const storageInfo = document.getElementById('storageInfo');
+        const cookiesEnabled = navigator.cookieEnabled;
+        const localStorageEnabled = (() => {
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                return true;
+            } catch (e) {
+                return false;
+            }
+        })();
+
+        storageInfo.innerHTML = `
+            <div class="info"><strong>Cookies Enabled:</strong> ${cookiesEnabled ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>LocalStorage Available:</strong> ${localStorageEnabled ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>SessionStorage Available:</strong> ${typeof sessionStorage !== 'undefined' ? 'Yes' : 'No'}</div>
+            <div class="info"><strong>IndexedDB Available:</strong> ${typeof indexedDB !== 'undefined' ? 'Yes' : 'No'}</div>
+        `;
+
+        // === FONT DETECTION ===
+        const fontInfo = document.getElementById('fontInfo');
+        const commonFonts = [
+            'Arial', 'Times New Roman', 'Verdana', 'Helvetica', 'Courier New',
+            'Georgia', 'Palatino', 'Garamond', 'Comic Sans MS', 'Trebuchet MS',
+            'Arial Black', 'Impact', 'Lucida Sans Unicode', 'Tahoma', 'Geneva',
+            'Century Gothic', 'Bookman', 'Avant Garde', 'Calibri', 'Cambria',
+            'Candara', 'Consolas', 'Constantia', 'Corbel', 'Franklin Gothic Medium',
+            'Gill Sans', 'Segoe UI', 'Optima', 'Futura', 'Brush Script MT'
+        ];
+
+        const fontResults = [];
+        const testString = 'mmmmmmmmmmlli';
+        const baseFont = 'monospace';
+
+        const baseSpan = document.createElement('span');
+        baseSpan.style.fontFamily = baseFont;
+        baseSpan.style.position = 'absolute';
+        baseSpan.style.top = '-9999px';
+        baseSpan.style.left = '-9999px';
+        baseSpan.style.visibility = 'hidden';
+        baseSpan.innerText = testString;
+        document.body.appendChild(baseSpan);
+        const baseWidth = baseSpan.offsetWidth;
+        document.body.removeChild(baseSpan);
+
+        commonFonts.forEach(font => {
+            const span = document.createElement('span');
+            span.style.fontFamily = `'${font}', ${baseFont}`;
+            span.style.position = 'absolute';
+            span.style.top = '-9999px';
+            span.style.left = '-9999px';
+            span.style.visibility = 'hidden';
+            span.innerText = testString;
+            document.body.appendChild(span);
+            const width = span.offsetWidth;
+            document.body.removeChild(span);
+            if (width !== baseWidth) {
+                fontResults.push(`<div class="info"><strong>${font}:</strong> detected (${width}px)</div>`);
+            }
+        });
+
+        fontInfo.innerHTML = fontResults.length > 0 
+            ? fontResults.join('')
+            : '<div class="info">No additional fonts detected beyond system defaults.</div>';
+
+        // === CANVAS FINGERPRINTING ===
         const canvasInfo = document.getElementById('canvasInfo');
         const canvas = document.createElement('canvas');
+        canvas.width = 300;
+        canvas.height = 60;
         const ctx = canvas.getContext('2d');
         ctx.textBaseline = 'top';
-        ctx.font = "14px 'Arial'";
-        ctx.textBaseline = 'alphabetic';
+        ctx.font = "18px Arial";
         ctx.fillStyle = '#f60';
-        ctx.fillRect(125, 1, 62, 20);
+        ctx.fillRect(0, 0, 300, 60);
         ctx.fillStyle = '#069';
-        ctx.fillText('Cwm fjordbank glyphs vext quiz, \ud83d\ude03', 2, 15);
+        ctx.fillText('Browser fingerprint: Cwm fjordbank glyphs vext quiz, 😃', 2, 2);
         ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-        ctx.fillText('Cwm fjordbank glyphs vext quiz, \ud83d\ude03', 4, 17);
-        const canvasData = canvas.toDataURL();
-        canvasInfo.innerHTML = `<div class="info"><strong>Canvas Fingerprint (JS):</strong> ${canvasData}</div>`;
+        ctx.fillText('Browser fingerprint: Cwm fjordbank glyphs vext quiz, 😃', 4, 4);
+        const canvasFingerprint = canvas.toDataURL().substring(0, 80) + '...';
+        canvasInfo.innerHTML = `<div class="info"><strong>Canvas Fingerprint (partial):</strong> ${canvasFingerprint}</div>`;
 
+        // === WEBGL FINGERPRINTING ===
         const webglInfo = document.getElementById('webglInfo');
-        const canvasWebGL = document.createElement('canvas');
-        const gl = canvasWebGL.getContext('webgl');
+        const glCanvas = document.createElement('canvas');
+        const gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
         if (gl) {
             const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-            const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-            const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            webglInfo.innerHTML = `<div class="info"><strong>WebGL Renderer:</strong> ${renderer}</div>
-                                   <div class="info"><strong>WebGL Vendor:</strong> ${vendor}</div>`;
+            if (debugInfo) {
+                const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                webglInfo.innerHTML = `
+                    <div class="info"><strong>WebGL Renderer:</strong> ${renderer}</div>
+                    <div class="info"><strong>WebGL Vendor:</strong> ${vendor}</div>
+                `;
+            } else {
+                webglInfo.innerHTML = '<div class="info"><strong>WebGL Debug Info:</strong> Not available (browser blocks it)</div>';
+            }
         } else {
-            webglInfo.innerHTML = '<div class="info"><strong>WebGL is not supported by this browser.</strong></div>';
+            webglInfo.innerHTML = '<div class="info"><strong>WebGL:</strong> Not supported</div>';
         }
 
-        const fontInfo = document.getElementById('fontInfo');
-        const fontList = ['Arial', 'Times New Roman', 'Verdana', 'Helvetica', 'Courier New'];
-        const fontDetection = fontList.map(font => {
-            const element = document.createElement('span');
-            element.style.fontFamily = font;
-            element.style.position = 'absolute';
-            element.style.top = '-9999px';
-            element.style.left = '-9999px';
-            element.style.visibility = 'hidden';
-            element.innerText = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-            document.body.appendChild(element);
-            const width = element.offsetWidth;
-            document.body.removeChild(element);
-            return { font, width };
+        // === USER BEHAVIOR ===
+        const behaviorInfo = document.getElementById('behaviorInfo');
+        let lastMouseX = -1, lastMouseY = -1;
+        let clickCount = 0;
+        let lastClickTime = null;
+        let lastClickX = null, lastClickY = null;
+
+        let lastKeyInfo = null;
+        const keyboardSupported = typeof KeyboardEvent !== 'undefined';
+
+        const updateBehavior = () => {
+            let keyInfoHtml = '';
+            if (keyboardSupported) {
+                if (lastKeyInfo) {
+                    const mods = [];
+                    if (lastKeyInfo.ctrl) mods.push('Ctrl');
+                    if (lastKeyInfo.shift) mods.push('Shift');
+                    if (lastKeyInfo.alt) mods.push('Alt');
+                    if (lastKeyInfo.meta) mods.push('Cmd');
+                    const modStr = mods.length ? `[${mods.join('+')}] ` : '';
+                    keyInfoHtml = `<div class="info"><strong>Last Key Pressed:</strong> ${modStr}<code>${lastKeyInfo.code}</code> → "${lastKeyInfo.key}" at ${new Date(lastKeyInfo.time).toLocaleTimeString()}</div>`;
+                } else {
+                    keyInfoHtml = `<div class="info"><strong>Keyboard Tracking:</strong> Ready (press any key outside input fields)</div>`;
+                }
+            } else {
+                keyInfoHtml = `<div class="info"><strong>Keyboard API:</strong> Not supported</div>`;
+            }
+
+            behaviorInfo.innerHTML = `
+                <div class="info"><strong>Mouse Position:</strong> <span class="mouse-coords">X: ${lastMouseX}, Y: ${lastMouseY}</span></div>
+                <div class="info"><strong>Total Clicks:</strong> ${clickCount}</div>
+                <div class="info"><strong>Last Click:</strong> ${lastClickTime ? new Date(lastClickTime).toLocaleTimeString() : '—'}</div>
+                ${lastClickX !== null ? `<div class="info"><strong>Last Click Position:</strong> <span class="mouse-coords">X: ${lastClickX}, Y: ${lastClickY}</span></div>` : ''}
+                ${keyInfoHtml}
+            `;
+        };
+
+        document.addEventListener('mousemove', (e) => {
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            updateBehavior();
         });
-        fontInfo.innerHTML = fontDetection.map(font => `<div class="info"><strong>${font.font}:</strong> ${font.width}px</div>`).join('');
+
+        document.addEventListener('click', (e) => {
+            clickCount++;
+            lastClickTime = Date.now();
+            lastClickX = e.clientX;
+            lastClickY = e.clientY;
+            updateBehavior();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+            
+            lastKeyInfo = {
+                key: e.key,
+                code: e.code,
+                ctrl: e.ctrlKey,
+                shift: e.shiftKey,
+                alt: e.altKey,
+                meta: e.metaKey,
+                time: Date.now()
+            };
+            updateBehavior();
+        });
+
+        updateBehavior();
     </script>
 </body>
 </html>
